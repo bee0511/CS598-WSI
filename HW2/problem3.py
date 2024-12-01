@@ -21,24 +21,26 @@ theta_range = np.linspace(-180, 180, 361)  # In degrees
 theta_radians = np.radians(theta_range)  # Convert to radians
 
 # Initialize the multipath profile array
-P = np.zeros_like(theta_range, dtype=float)
+P = []
 
 # Compute multipath profile using the given formula
 for i, theta_prime in enumerate(theta_radians):
     phase_compensation = np.exp(-1j * 2 * np.pi *
                                 R * np.cos(phi - theta_prime) / wavelength)
-    P[i] = np.abs(np.sum(h[:, 1] / h[:, 0] * phase_compensation)
-                  )**2  # Ratio compensates offsets
-    
+    P.append(np.abs(np.sum(h[:, 1] / h[:, 0] * phase_compensation)
+                    )**2)  # Ratio compensates offsets
+
 # Load validation data from MultipathProfile.mat
 validation_data = scipy.io.loadmat('MultipathProfile.mat')
 P_validation = validation_data['P'].flatten()  # Validation power values
-theta_validation = np.linspace(-180, 180, len(P_validation))  # Corresponding angles
+# Corresponding angles
+theta_validation = np.linspace(-180, 180, len(P_validation))
 
 # Plot the computed multipath profile and validation data
 plt.figure(figsize=(10, 6))
 plt.plot(theta_range, P, label='Computed Profile', color='blue')
-plt.plot(theta_validation, P_validation, label='Validation Profile', linestyle='--', color='red')
+plt.plot(theta_validation, P_validation,
+         label='Validation Profile', linestyle='--', color='red')
 plt.title('Multipath Profile Comparison')
 plt.xlabel('Angle θ′ (degrees)')
 plt.ylabel('Power P(θ′)')
