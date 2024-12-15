@@ -10,13 +10,13 @@ csifile = '1207_50cm.dat'
 csi_timestamp = '1207_50cm.txt'  # format: packet_id,timestamp
 roomba_position = 'position_log_1207.txt'  # format: timestamp,position
 
-# csifile = '1207_50cm_test2.dat'
-# csi_timestamp = '1207_50cm_test2.txt'  # format: packet_id,timestamp
-# roomba_position = '50x_1207.txt'  # format: timestamp,position
+csifile = '1207_50cm_test2.dat'
+csi_timestamp = '1207_50cm_test2.txt'  # format: packet_id,timestamp
+roomba_position = '50x_1207.txt'  # format: timestamp,position
 
-# csifile = '1207_50cm_floor.dat'
-# csi_timestamp = '1207_50cm_floor.txt'  # format: packet_id,timestamp
-# roomba_position = '50x_floor.txt'  # format: timestamp,position
+csifile = '1207_50cm_floor.dat'
+csi_timestamp = '1207_50cm_floor.txt'  # format: packet_id,timestamp
+roomba_position = '50x_floor.txt'  # format: timestamp,position
 
 # csifile = '1210_test3.dat'
 # csi_timestamp = '1210_test3.txt'  # format: packet_id,timestamp
