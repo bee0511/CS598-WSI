@@ -113,4 +113,3 @@ plt.xlabel('X Position (cm)')
 plt.ylabel('Y Position (cm)')
 plt.title('Heatmap of Average Signal Strength')
 plt.show()
-
