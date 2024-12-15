@@ -4,28 +4,10 @@ import matplotlib.pyplot as plt
 import re
 
 # 讀取 CSI 資料
-static_csifile = '1210_test1.dat'
-
-csifile = '1207_50cm.dat'
-csi_timestamp = '1207_50cm.txt'  # format: packet_id,timestamp
-roomba_position = 'position_log_1207.txt'  # format: timestamp,position
-
-# csifile = '1207_50cm_test2.dat'
-# csi_timestamp = '1207_50cm_test2.txt'  # format: packet_id,timestamp
-# roomba_position = '50x_1207.txt'  # format: timestamp,position
-
-# csifile = '1207_50cm_floor.dat'
-# csi_timestamp = '1207_50cm_floor.txt'  # format: packet_id,timestamp
-# roomba_position = '50x_floor.txt'  # format: timestamp,position
-
-# csifile = '1210_test3.dat'
-# csi_timestamp = '1210_test3.txt'  # format: packet_id,timestamp
-# roomba_position = '1210_test3_roomba.txt'  # format: timestamp,position
-
-# csifile = '1210_test4.dat'
-# csi_timestamp = '1210_test4.txt'  # format: packet_id,timestamp
-# roomba_position = '50x_floor_complete.txt'  # format: timestamp,position
-
+# csifile = 'static_csi.dat'
+csifile = '50cm_1204.dat' 
+csi_timestamp = '50cm_1204.txt' # format: packet_id,timestamp 
+roomba_position = 'position_log.txt' # format: timestamp,position
 
 csi_data = csiread.Intel(csifile)
 
@@ -34,7 +16,7 @@ csi_data.read()
 csi_matrix = csi_data.get_scaled_csi()  # 獲取 CSI 矩陣
 
 # 計算每個 packet 的訊號強度
-signal_strength = np.mean(np.abs(csi_matrix), axis=(1, 2, 3))
+signal_strength = np.mean(np.abs(csi_matrix)**2, axis=(1, 2, 3))
 
 # 讀取 timestamp 資料
 timestamps = np.loadtxt(csi_timestamp, delimiter=',', usecols=1)
@@ -66,6 +48,23 @@ positions = np.array(positions)
 # print(positions)
 timestamps = np.array(timestamps)
 
+# 繪製訊號強度與 timestamp 的圖表，並加上位置
+plt.figure()
+plt.plot(filtered_timestamps, filtered_signal_strength, label='Signal Strength')
+
+annotated_positions = set()
+for i, (timestamp, (x, y)) in enumerate(zip(timestamps, positions)):
+    pos = (x, y)
+    if pos not in annotated_positions:
+        plt.annotate(f'({x},{y})', (timestamp, filtered_signal_strength[i]), textcoords="offset points", xytext=(0,10), ha='center')
+        plt.plot(timestamp, filtered_signal_strength[i], 'ro')  # 在圖上添加一個點
+        annotated_positions.add(pos)
+
+plt.xlabel('Timestamp')
+plt.ylabel('Signal Strength')
+plt.title('Signal Strength vs Timestamp (1% - 99%)')
+plt.legend()
+plt.show()
 
 # 計算每個位置的平均訊號強度
 unique_positions = []
@@ -92,25 +91,50 @@ if current_signals:
 unique_positions = np.array(unique_positions)
 average_signal_strength = np.array(average_signal_strength)
 
-# 創建6x6的網格
-grid_size = 6
-heatmap = np.zeros((grid_size, grid_size))
-
-# 將平均訊號強度填入網格
-for (x, y), strength in zip(unique_positions, average_signal_strength):
-    grid_x = x // 10
-    grid_y = y // 10
-    if 0 <= grid_x < grid_size and 0 <= grid_y < grid_size:
-        heatmap[grid_y, grid_x] = strength
-
-# 繪製熱圖
+# 繪製平均訊號強度與位置的圖表
 plt.figure()
-plt.imshow(heatmap, cmap='hot', interpolation='nearest', origin='lower')
-plt.colorbar(label='Average Signal Strength')
-plt.xticks(ticks=np.arange(grid_size), labels=np.arange(0, grid_size * 10, 10))
-plt.yticks(ticks=np.arange(grid_size), labels=np.arange(0, grid_size * 10, 10))
-plt.xlabel('X Position (cm)')
-plt.ylabel('Y Position (cm)')
-plt.title('Heatmap of Average Signal Strength')
+plt.plot(range(len(average_signal_strength)), average_signal_strength, label='Average Signal Strength')
+
+for i, (x, y) in enumerate(unique_positions):
+    plt.annotate(f'({x},{y})', (i, average_signal_strength[i]), textcoords="offset points", xytext=(0,10), ha='center')
+    plt.plot(i, average_signal_strength[i], 'ro')  # 在圖上添加一個點
+
+plt.xlabel('Position Index')
+plt.ylabel('Average Signal Strength')
+plt.title('Average Signal Strength vs Position')
+plt.legend()
 plt.show()
 
+# 計算每個位置的訊號強度
+unique_positions = []
+position_signal_strength = []
+current_position = None
+current_signals = []
+
+for i, (timestamp, (x, y)) in enumerate(zip(timestamps, positions)):
+    pos = (x, y)
+    if pos != current_position:
+        if current_signals:
+            unique_positions.append(current_position)
+            position_signal_strength.append(current_signals)
+        current_position = pos
+        current_signals = [filtered_signal_strength[i]]
+    else:
+        current_signals.append(filtered_signal_strength[i])
+
+# 添加最後一個位置的訊號強度
+if current_signals:
+    unique_positions.append(current_position)
+    position_signal_strength.append(current_signals)
+
+unique_positions = np.array(unique_positions)
+
+# 繪製每個位置的訊號強度的 box plot
+plt.figure()
+plt.boxplot(position_signal_strength, labels=[f'({x},{y})' for x, y in unique_positions], vert=True, patch_artist=True)
+
+plt.xlabel('Position')
+plt.ylabel('Signal Strength')
+plt.title('Signal Strength Distribution by Position')
+plt.xticks(rotation=45)
+plt.show()
